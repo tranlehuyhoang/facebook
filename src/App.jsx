@@ -1,214 +1,203 @@
-import { useState } from 'react'
-
-
-function App() {
+import React, { useState } from 'react';
+import './facebookUidTool.css'; // Import any necessary CSS file
+const App = () => {
   const [facebookLink, setFacebookLink] = useState('');
-  const [facebookID, setFacebookID] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    // Gửi yêu cầu tới URL để lấy ID
-    try {
-      const parts = facebookLink.split("/");
-      const lastPart = parts[parts.length - 1];
-      const response = await fetch(`https://fbuid.mktsoftware.net/api/v1/fbprofile?url=https%3A%2F%2Fwww.facebook.com%2F${lastPart}`);
-      const data = await response.json();
+  const [loading, setLoading] = useState(false);
+  const [uidResult, setUidResult] = useState('');
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupVisible, setPopupVisible] = useState(false);
 
-      setFacebookID(data.uid);
-    } catch (error) {
-      console.error(error);
-    }
-    setIsSubmitting(false);
+  const showPopup = (message) => {
+    setPopupMessage(message);
+    setPopupVisible(true);
+    setTimeout(() => {
+      hidePopup();
+    }, 5000);
   };
+
+  const hidePopup = () => {
+    setPopupVisible(false);
+  };
+
+  const getUid = () => {
+    setLoading(true);
+    setUidResult('');
+
+    if (facebookLink.startsWith('https://fb.com/')) {
+      const correctedLink = facebookLink.replace('https://fb.com/', 'https://facebook.com/');
+      setFacebookLink(correctedLink);
+
+      const apiUrl = `https://fbuid.mktsoftware.net/api/v1/fbprofile?url=${encodeURIComponent(correctedLink)}`;
+
+      fetch(apiUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          setLoading(false);
+
+          if (data.uid) {
+            setFacebookLink(data.uid);
+            showPopup('UID Obtained Successfully!');
+          } else {
+            setUidResult('Error: UID not found in the response');
+            showPopup('Error: UID not found or an API error occurred.');
+          }
+        })
+        .catch((error) => {
+          setLoading(false);
+          setUidResult(`Error: ${error.message}`);
+          showPopup('Error: ' + error.message);
+        });
+    } else {
+      const userIdMatch = facebookLink.match(/profile\.php\?id=(\d+)/);
+
+      if (userIdMatch) {
+        const userId = userIdMatch[1];
+        const apiUrl = `https://fbuid.mktsoftware.net/api/v1/fbprofile?url=https://www.facebook.com/profile.php?id=${userId}`;
+
+        fetch(apiUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            setLoading(false);
+
+            if (data.uid) {
+              setFacebookLink(data.uid);
+              showPopup('UID Obtained Successfully!');
+            } else {
+              setUidResult('Error: UID not found in the response');
+              showPopup('Error: UID not found or an API error occurred.');
+            }
+          })
+          .catch((error) => {
+            setLoading(false);
+            setUidResult(`Error: ${error.message}`);
+            showPopup('Error: ' + error.message);
+          });
+      } else {
+        const profileUrlMatch = facebookLink.match(/facebook\.com\/(.*?)(?:\?|$)/);
+
+        if (profileUrlMatch) {
+          const profileUrl = `https://www.facebook.com/${profileUrlMatch[1]}`;
+          const apiUrl = `https://fbuid.mktsoftware.net/api/v1/fbprofile?url=${encodeURIComponent(profileUrl)}`;
+
+          fetch(apiUrl)
+            .then((response) => response.json())
+            .then((data) => {
+              setLoading(false);
+
+              if (data.uid) {
+                setFacebookLink(data.uid);
+                showPopup('UID Obtained Successfully!');
+              } else {
+                setUidResult('Error: UID not found in the response');
+                showPopup('Error: UID not found or an API error occurred.');
+              }
+            })
+            .catch((error) => {
+              setLoading(false);
+              setUidResult(`Error: ${error.message}`);
+              showPopup('Error: ' + error.message);
+            });
+        } else {
+          setLoading(false);
+          setUidResult('Error: Invalid input format');
+          showPopup('Error: Invalid input format. Please enter a valid Facebook profile link.');
+        }
+      }
+    }
+  };
+
+  const copyUid = () => {
+    navigator.clipboard.writeText(facebookLink);
+    showPopup('UID copied to clipboard: ' + facebookLink);
+  };
+
   return (
     <>
-      <>
-        <meta charSet="utf-8" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, shrink-to-fit=no"
-        />
-        <title>Công Cụ Lấy ID Facebook | Check ID | Find ID | Tìm ID Facebook</title>
-        <meta data-n-head="ssr" charSet="utf-8" />
-        <meta
-          data-n-head="ssr"
-          name="viewport"
-          content="width=device-width,initial-scale=1"
-        />
-        <meta
-          data-n-head="ssr"
-          name="description"
-          content="Công cụ hoàn toàn miễn phí giúp dễ dàng tìm kiếm UID Facebook bạn bè, thành viên nhóm trên , người like, comment và share ... một cách đơn giản và dễ dàng"
-        />
-        <meta data-n-head="ssr" name="twitter:card" content="summary" />
-        <meta
-          data-n-head="ssr"
-          name="twitter:description"
-          content="Công cụ hoàn toàn miễn phí giúp dễ dàng tìm kiếm UID Facebook bạn bè, thành viên nhóm trên , người like, comment và share ... một cách đơn giản và dễ dàng"
-        />
-        <meta
-          data-n-head="ssr"
-          name="twitter:title"
-          content="Công cụ giúp tìm kiếm UID bạn bè, thành viên nhóm, người like, comment"
-        />
-        <meta data-n-head="ssr" name="twitter:image" content="" />
-        <meta data-n-head="ssr" property="og:locale" content="vi_VN" />
-        <meta data-n-head="ssr" property="og:type" content="website" />
-        <meta
-          data-n-head="ssr"
-          property="og:title"
-          content="Công cụ giúp tìm kiếm UID bạn bè, thành viên nhóm, người like, comment"
-        />
-        <meta
-          data-n-head="ssr"
-          property="og:description"
-          content="Công cụ hoàn toàn miễn phí giúp dễ dàng tìm kiếm UID Facebook bạn bè, thành viên nhóm trên , người like, comment và share ... một cách đơn giản và dễ dàng"
-        />
-        <meta
-          data-n-head="ssr"
-          property="og:url"
-          content="https://id.traodoisub.com"
-        />
-        <meta
-          data-n-head="ssr"
-          property="og:site_name"
-          content="Get ID By Traodoisub"
-        />
-        <meta data-n-head="ssr" property="fb:app_id" content="" />
-        <meta data-n-head="ssr" property="og:image" content="" />
-        <meta data-n-head="ssr" property="og:image:secure_url" content="" />
-        <meta data-n-head="ssr" property="og:image:width" content={1200} />
-        <meta name="robots" content="index, archive, follow, noodp" />
-        <meta name="googlebot" content="index,archive,follow,noodp" />
-        <meta name="msnbot" content="all,index,follow" />
-        <link rel="shortcut icon" href="../../assets/svg/logos/logo-short.svg" />
-        <link
-          href="../../fonts.googleapis.com/css27217.css?family=Open+Sans:wght@400;600&display=swap"
-          rel="stylesheet"
-        />
-        <link rel="stylesheet" href="../../assets/css/vendor.min.css" />
-        <link rel="stylesheet" href="../../assets/vendor/icon-set/style.css" />
-        <link rel="stylesheet" href="../../assets/css/theme.minc619.css?v=1.0" />
-        <br />
-        <main id="content" role="main" className="main">
-          <div className="content container-fluid">
-            <div className="row justify-content-lg-center">
-              <div className="col-lg-10">
-                <div className="row">
-                  <div className="col-lg-4">
-                    <div id="accountSidebarNav" />
-                    <div
-                      className="js-sticky-block card mb-3 mb-lg-5"
-                      data-hs-sticky-block-options='{
-                   "parentSelector": "#accountSidebarNav",
-                   "breakpoint": "lg",
-                   "startPoint": "#accountSidebarNav",
-                   "endPoint": "#stickyBlockEndPoint",
-                   "stickyOffsetTop": 20
-                 }'
-                    >
-                      <div className="card-header">
-                        <h5 className="card-header-title">Một số thông tin</h5>
-                      </div>
-                      <div className="card-body">
+      <link
+        href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css"
+        rel="stylesheet"
+      />
+      <style
+        dangerouslySetInnerHTML={{
+          __html:
+            "\n        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');\n\n        body {\n            font-family: 'Montserrat', sans-serif;\n        }\n\n        .popup-container {\n            position: fixed;\n            bottom: 0;\n            left: 0;\n            width: 100%;\n            display: flex;\n            justify-content: flex-start;\n            align-items: flex-end;\n            padding: 10px;\n        }\n\n        .popup {\n            padding: 15px;\n            border-radius: 8px;\n            display: none;\n            animation: fadeInOut 5s ease-in-out;\n        }\n\n        .popup-success {\n            background-color: #4CAF50;\n            color: white;\n        }\n\n        .popup-error {\n            background-color: #FF6347;\n            color: white;\n        }\n\n        @keyframes fadeInOut {\n            0%, 100% {\n                opacity: 0;\n            }\n            10%, 90% {\n                opacity: 1;\n            }\n        }\n        .reset-button {\n            cursor: pointer;\n        }\n        .custom-button {\n            display: inline-block;\n            padding: 10px 20px;\n            font-size: 16px;\n            font-weight: bold;\n            text-align: center;\n            text-decoration: none;\n            cursor: pointer;\n            border-radius: 8px;\n            transition: background-color 0.3s;\n        }\n    "
+        }}
+      />
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="w-full max-w-md p-6 bg-white rounded-md shadow-md">
+          <h2 className="text-2xl font-semibold mb-6">Facebook UID Tool</h2>
 
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-lg-8">
-                    <div className="card mb-3 mb-lg-5">
-                      <div className="card-header">
-                        <h5 className="card-header-title">
-                          Công cụ miễn phí giúp bạn dễ dàng lấy UID Facebook một cách
-                          dễ dàng.
-                        </h5>
-                      </div>
-                      <div className="card-body">
-                        <div id="noti_reg" />
-                        <form id="check_form" onSubmit={handleSubmit}>
-                          <div className="form-group">
-                            <label htmlFor="formControlHoverLightFullName" className="input-label">
-                              Link Facebook
-                            </label>
-                            <input
-                              type="url"
-                              className="form-control form-control-hover-light"
-                              id="link"
-                              name="link"
-                              placeholder="Nhập Link Facebook cần lấy ID"
-                              value={facebookLink}
-                              onChange={(event) => setFacebookLink(event.target.value)}
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <button
-                              type="submit"
-                              className="btn btn-block btn-primary"
-                              id="check"
-                              disabled={isSubmitting} // Vô hiệu hóa nút khi đang xử lý yêu cầu
-                            >
-                              {isSubmitting ? 'Đang xử lý...' : 'Lấy ID'}
-                            </button>
-                          </div>
-                          {facebookID && (
-                            <div>
-                              <p>Kết quả: {facebookID}</p>
-                            </div>
-                          )}
-                        </form>
-                      </div>
-                      <div className="card-footer" />
-                    </div>
-                    <div id="stickyBlockEndPoint" />
-                  </div>
-                </div>
-              </div>
+          <div className="mb-4">
+            <label htmlFor="facebookLink" className="block text-sm font-medium text-gray-600 mb-2">
+              Facebook Profile Link
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                id="facebookLink"
+                className="w-full p-2 border rounded-md"
+                value={facebookLink}
+                onChange={(e) => setFacebookLink(e.target.value)}
+                placeholder="Enter Facebook profile link"
+              />
+              <span className="absolute right-2 top-2 cursor-pointer" onClick={copyUid}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5h7a2 2 0 012 2v12a2 2 0 01-2 2H9a2 2 0 01-2-2V7a2 2 0 012-2zm0 0V3a2 2 0 012-2h2a2 2 0 012 2v2m-6 9l2 2 4-4m-2-5h6m-6 0a2 2 0 01-2-2V3a2 2 0 012-2h2a2 2 0 012 2v2"
+                  />
+                </svg>
+              </span>
             </div>
           </div>
-        </main>
-        <div className="footer">
-          <div className="row justify-content-between align-items-center">
-            <div className="col">
-              <p className="font-size-sm mb-0">
-                © <span className="d-none d-sm-inline-block">2021 Traodoisub.</span>
-              </p>
-            </div>
-            <div className="col-auto">
-              <div className="d-flex justify-content-end">
-                <ul className="list-inline list-separator">
-                  <li className="list-inline-item">
-                    <a className="list-separator-link" href="#">
-                      FAQ
-                    </a>
-                  </li>
-                  <li className="list-inline-item">
-                    <div className="hs-unfold">
-                      <a
-                        className="js-hs-unfold-invoker btn btn-icon btn-ghost-secondary rounded-circle"
-                        href="javascript:;"
-                        data-hs-unfold-options='{
-                          "target": "#keyboardShortcutsSidebar",
-                          "type": "css-animation",
-                          "animationIn": "fadeInRight",
-                          "animationOut": "fadeOutRight",
-                          "hasOverlay": true,
-                          "smartPositionOff": true
-                         }'
-                      >
-                        <i className="tio-command-key" />
-                      </a>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
+
+          <div className="flex items-center justify-between mb-6">
+            <button
+              className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
+              onClick={getUid}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Get UID'}
+            </button>
+
+            {uidResult && (
+              <button
+                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
+                onClick={copyUid}
+              >
+                Copy UID
+              </button>
+            )}
           </div>
+
+          {uidResult && (
+            <div className="mb-4">
+              <label htmlFor="uidResult" className="block text-sm font-medium text-gray-600 mb-2">
+                UID Result
+              </label>
+              <input
+                type="text"
+                id="uidResult"
+                className="w-full p-2 border rounded-md"
+                value={uidResult}
+                readOnly
+              />
+            </div>
+          )}
+
+          {popupVisible && (
+            <div className="bg-blue-100 text-blue-900 px-4 py-2 rounded-md mb-4">{popupMessage}</div>
+          )}
         </div>
-      </>
-
-
+      </div>
     </>
   )
 }

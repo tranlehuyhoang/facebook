@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
+
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.popup-container {
+    position       : fixed;
+    bottom         : 0;
+    left           : 0;
+    width          : 100%;
+    display        : flex;
+    justify-content: flex-start;
+    align-items    : flex-end;
+    padding        : 10px;
+}
+
+.popup {
+    padding      : 15px;
+    border-radius: 8px;
+    display      : none;
+    animation    : fadeInOut 5s ease-in-out;
+}
+
+.popup-success {
+    background-color: #4CAF50;
+    color           : white;
+}
+
+.popup-error {
+    background-color: #FF6347;
+    color           : white;
+}
+
+@keyframes fadeInOut {
+
+    0%,
+    100% {
+        opacity: 0;
+    }
+
+    10%,
+    90% {
+        opacity: 1;
+    }
+}
+
+.reset-button {
+    cursor: pointer;
+}
+
+.custom-button {
+    display        : inline-block;
+    padding        : 10px 20px;
+    font-size      : 16px;
+    font-weight    : bold;
+    text-align     : center;
+    text-decoration: none;
+    cursor         : pointer;
+    border-radius  : 8px;
+    transition     : background-color 0.3s;
+}
